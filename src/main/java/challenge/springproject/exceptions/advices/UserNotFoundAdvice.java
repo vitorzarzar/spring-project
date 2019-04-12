@@ -1,4 +1,4 @@
-package challenge.springproject.controllers.advices;
+package challenge.springproject.exceptions.advices;
 
 import challenge.springproject.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
