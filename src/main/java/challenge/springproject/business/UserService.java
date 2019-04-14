@@ -46,8 +46,10 @@ public class UserService {
         newUser.setCreated(LocalDate.now());
         newUser.setLastLogin(LocalDate.now());
         dao.save(newUser);
+
         newUser.setToken(tokenAuthenticationService.generateAuthentication(newUser));
-        dao.setToken(newUser.getToken());
+        dao.setToken(newUser.getToken(), newUser.getId());
+
         return new UserOutputDto(
                 newUser.getId(),
                 newUser.getName(),

@@ -11,8 +11,8 @@ public interface UserDao extends JpaRepository<User, Long> {
     User findByEmail(String email);
 
     @Modifying
-    @Query("update User u set u.token = ?1")
-    void setToken(String token);
+    @Query("update User u set u.token = ?1 where u.id = ?2")
+    void setToken(String token, Long id);
 
     User findByToken(String token);
 
