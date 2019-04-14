@@ -1,10 +1,7 @@
 package challenge.springproject.exceptions.hadlers;
 
 import challenge.springproject.dto.output.ExceptionOutputDto;
-import challenge.springproject.exceptions.EmailAlreadyExistsException;
-import challenge.springproject.exceptions.EmailNotFoundException;
-import challenge.springproject.exceptions.InvalidTokenException;
-import challenge.springproject.exceptions.UserNotFoundException;
+import challenge.springproject.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,7 +15,8 @@ public class BadRequestHandler {
             EmailAlreadyExistsException.class,
             EmailNotFoundException.class,
             UserNotFoundException.class,
-            InvalidTokenException.class
+            InvalidTokenException.class,
+            InvalidDataException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody

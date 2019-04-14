@@ -11,11 +11,10 @@ import challenge.springproject.exceptions.InvalidTokenException;
 import challenge.springproject.persistence.UserDao;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,6 @@ public class AuthenticationService {
 
     private final TokenAuthenticationService tokenAuthenticationService;
 
-    @Autowired
     public AuthenticationService(UserDao dao, PasswordEncoder passwordEncoder, TokenAuthenticationService tokenAuthenticationService) {
         this.dao = dao;
         this.passwordEncoder = passwordEncoder;
@@ -41,7 +39,7 @@ public class AuthenticationService {
 
         if(!passwordEncoder.matches(dto.getPassword(), user.getPassword())) throw new InvalidPasswordException();
 
-        user.setLastLogin(LocalDate.now());
+        user.setLastLogin(LocalDateTime.now());
         user.setToken(tokenAuthenticationService.generateAuthentication(user));
 
         dao.save(user);

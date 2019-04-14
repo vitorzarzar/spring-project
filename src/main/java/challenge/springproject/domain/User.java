@@ -2,6 +2,7 @@ package challenge.springproject.domain;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -20,16 +21,16 @@ public class User {
     @OneToMany(mappedBy = "userId")
     private List<Phone> phones;
 
-    private LocalDate created;
+    private LocalDateTime created;
 
     @Column(name = "last_login")
-    private LocalDate lastLogin;
+    private LocalDateTime lastLogin;
 
     private String token;
 
     public User() { }
 
-    public User(String name, String email, String password, List<Phone> phones, LocalDate created, LocalDate lastLogin, String token) {
+    public User(String name, String email, String password, List<Phone> phones, LocalDateTime created, LocalDateTime lastLogin, String token) {
         this.name = name;
         this.email = email;
         this.password = password;
@@ -79,19 +80,19 @@ public class User {
         this.phones = phones;
     }
 
-    public LocalDate getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(LocalDate created) {
+    public void setCreated(LocalDateTime created) {
         this.created = created;
     }
 
-    public LocalDate getLastLogin() {
+    public LocalDateTime getLastLogin() {
         return lastLogin;
     }
 
-    public void setLastLogin(LocalDate lastLogin) {
+    public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
     }
 

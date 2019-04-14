@@ -10,10 +10,12 @@ import challenge.springproject.exceptions.IdInconsistentTokenException;
 import challenge.springproject.exceptions.OutdatedTokenException;
 import challenge.springproject.exceptions.UserNotFoundException;
 import challenge.springproject.persistence.UserDao;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,7 +29,6 @@ public class UserService {
 
     private final TokenAuthenticationService tokenAuthenticationService;
 
-    @Autowired
     public UserService(UserDao dao, PasswordEncoder passwordEncoder, AuthenticationService authenticationService, TokenAuthenticationService tokenAuthenticationService) {
         this.dao = dao;
         this.passwordEncoder = passwordEncoder;
@@ -43,8 +44,8 @@ public class UserService {
         newUser.setEmail(dto.getEmail());
         newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         newUser.setPhones(dto.getPhones().stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
-        newUser.setCreated(LocalDate.now());
-        newUser.setLastLogin(LocalDate.now());
+        newUser.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        newUser.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         dao.save(newUser);
 
         newUser.setToken(tokenAuthenticationService.generateAuthentication(newUser));
