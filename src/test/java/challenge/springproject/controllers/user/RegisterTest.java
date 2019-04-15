@@ -1,6 +1,7 @@
-package challenge.springproject.controllers;
+package challenge.springproject.controllers.user;
 
 import challenge.springproject.business.UserService;
+import challenge.springproject.controllers.UserController;
 import challenge.springproject.dto.input.PhoneDto;
 import challenge.springproject.dto.input.RegisterDto;
 import challenge.springproject.dto.output.ExceptionOutputDto;
@@ -33,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(UserController.class)
-public class UserControllerTest {
+public class RegisterTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -62,8 +63,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void registerSuccessTest() throws Exception {
-
+    public void successTest() throws Exception {
         UserOutputDto userOutputDto = new UserOutputDto();
         userOutputDto.setId((long) 2);
         userOutputDto.setName("name");
@@ -82,45 +82,35 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String actualResponseBody = mvcResult.getResponse().getContentAsString();
+        String responseBody = mvcResult.getResponse().getContentAsString();
 
         assertThat(objectMapper.writeValueAsString(userOutputDto))
-                .isEqualToIgnoringWhitespace(actualResponseBody);
+                .isEqualToIgnoringWhitespace(responseBody);
     }
 
     @Test
-    public void registerInvalidDataTest() throws Exception {
-        InvalidDataException exception = new InvalidDataException();
+    public void invalidDataTest() throws Exception {
+        exceptionTest(new InvalidDataException(), new RegisterDto());
+    }
+
+    @Test
+    public void emailAlreadyExistTest() throws Exception {
+        exceptionTest(new EmailAlreadyExistsException(), testRegisterDto);
+    }
+
+    private void exceptionTest(Exception exception, RegisterDto registerDto) throws Exception {
+        Mockito.when(userService.register(registerDto)).thenThrow(exception);
 
         MvcResult mvcResult = mockMvc.perform(post("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(new RegisterDto())))
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(registerDto)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        String actualResponseBody = mvcResult.getResponse().getContentAsString();
-        String expectedResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
 
-        assertThat(expectedResponseBody)
-                .isEqualToIgnoringWhitespace(actualResponseBody);
-    }
-
-    @Test
-    public void registerEmailAlreadyExistTest() throws Exception {
-        EmailAlreadyExistsException exception = new EmailAlreadyExistsException();
-
-        Mockito.when(userService.register(testRegisterDto)).thenThrow(exception);
-
-        MvcResult mvcResult = mockMvc.perform(post("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testRegisterDto)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        String actualResponseBody = mvcResult.getResponse().getContentAsString();
-        String expectedResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
-
-        assertThat(expectedResponseBody)
-                .isEqualToIgnoringWhitespace(actualResponseBody);
+        assertThat(exceptionResponseBody)
+                .isEqualToIgnoringWhitespace(responseBody);
     }
 }

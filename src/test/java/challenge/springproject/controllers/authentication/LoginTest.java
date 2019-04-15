@@ -1,6 +1,7 @@
-package challenge.springproject.controllers;
+package challenge.springproject.controllers.authentication;
 
 import challenge.springproject.business.AuthenticationService;
+import challenge.springproject.controllers.AuthenticationController;
 import challenge.springproject.dto.input.LoginDto;
 import challenge.springproject.dto.input.PhoneDto;
 import challenge.springproject.dto.output.ExceptionOutputDto;
@@ -33,8 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(AuthenticationControllerTest.class)
-public class AuthenticationControllerTest {
+@WebMvcTest(AuthenticationController.class)
+public class LoginTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -60,7 +61,7 @@ public class AuthenticationControllerTest {
     }
 
     @Test
-    public void loginSuccessTest() throws Exception {
+    public void successTest() throws Exception {
 
         UserOutputDto userOutputDto = new UserOutputDto();
         userOutputDto.setId((long) 2);
@@ -80,14 +81,14 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String actualResponseBody = mvcResult.getResponse().getContentAsString();
+        String responseBody = mvcResult.getResponse().getContentAsString();
 
         assertThat(objectMapper.writeValueAsString(userOutputDto))
-                .isEqualToIgnoringWhitespace(actualResponseBody);
+                .isEqualToIgnoringWhitespace(responseBody);
     }
 
     @Test
-    public void loginInvalidDataTest() throws Exception {
+    public void invalidDataTest() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(new LoginDto())))
@@ -95,48 +96,36 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        String actualResponseBody = mvcResult.getResponse().getContentAsString();
-        String expectedResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(new InvalidDataException().getMessage()));
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(new InvalidDataException().getMessage()));
 
-        assertThat(expectedResponseBody)
-                .isEqualToIgnoringWhitespace(actualResponseBody);
+        assertThat(exceptionResponseBody)
+                .isEqualToIgnoringWhitespace(responseBody);
     }
 
     @Test
-    public void loginEmailNotFoundTest() throws Exception {
-        EmailNotFoundException exception = new EmailNotFoundException();
+    public void emailNotFoundTest() throws Exception {
+        exceptionTest(new EmailNotFoundException(), new LoginDto());
+    }
 
-        Mockito.when(authenticationService.login(testLoginDto)).thenThrow(exception);
+    @Test
+    public void invalidPasswordTest() throws Exception {
+        exceptionTest(new InvalidPasswordException(), testLoginDto);
+    }
+
+    private void exceptionTest(Exception exception, LoginDto loginDto) throws Exception {
+        Mockito.when(authenticationService.login(loginDto)).thenThrow(exception);
 
         MvcResult mvcResult = mockMvc.perform(post("/login")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(loginDto)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
-        String actualResponseBody = mvcResult.getResponse().getContentAsString();
-        String expectedResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
 
-        assertThat(expectedResponseBody)
-                .isEqualToIgnoringWhitespace(actualResponseBody);
-    }
-
-    @Test
-    public void loginInvalidPasswordTest() throws Exception {
-        InvalidPasswordException exception = new InvalidPasswordException();
-
-        Mockito.when(authenticationService.login(testLoginDto)).thenThrow(exception);
-
-        MvcResult mvcResult = mockMvc.perform(post("/login")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        String actualResponseBody = mvcResult.getResponse().getContentAsString();
-        String expectedResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
-
-        assertThat(expectedResponseBody)
-                .isEqualToIgnoringWhitespace(actualResponseBody);
+        assertThat(exceptionResponseBody)
+                .isEqualToIgnoringWhitespace(responseBody);
     }
 }
