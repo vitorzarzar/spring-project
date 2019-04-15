@@ -1,12 +1,13 @@
 package challenge.springproject.controllers;
 
-import challenge.springproject.business.UserService;
+import challenge.springproject.business.AuthenticationService;
+import challenge.springproject.dto.input.LoginDto;
 import challenge.springproject.dto.input.PhoneDto;
-import challenge.springproject.dto.input.RegisterDto;
 import challenge.springproject.dto.output.ExceptionOutputDto;
 import challenge.springproject.dto.output.UserOutputDto;
-import challenge.springproject.exceptions.EmailAlreadyExistsException;
+import challenge.springproject.exceptions.EmailNotFoundException;
 import challenge.springproject.exceptions.InvalidDataException;
+import challenge.springproject.exceptions.InvalidPasswordException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -32,8 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@WebMvcTest(UserController.class)
-public class UserControllerTest {
+@WebMvcTest(AuthenticationControllerTest.class)
+public class AuthenticationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,42 +43,39 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private UserService userService;
+    private AuthenticationService authenticationService;
 
     private ObjectWriter objectWriter;
 
-    private RegisterDto testRegisterDto;
-
+    private LoginDto testLoginDto;
+    private String testEmail = "email@email.com";
+    private String testPassword = "password";
     @Before
     public void setup() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         objectWriter = mapper.writer().withDefaultPrettyPrinter();
 
-        testRegisterDto = new RegisterDto();
-        testRegisterDto.setName("name");
-        testRegisterDto.setPassword("password");
-        testRegisterDto.setEmail("email@email.com");
-        testRegisterDto.setPhones(List.of(new PhoneDto("81", "33333333")));
+        testLoginDto = new LoginDto(testEmail, testPassword);
     }
 
     @Test
-    public void registerSuccessTest() throws Exception {
+    public void loginSuccessTest() throws Exception {
 
         UserOutputDto userOutputDto = new UserOutputDto();
         userOutputDto.setId((long) 2);
         userOutputDto.setName("name");
-        userOutputDto.setEmail("email@email.com");
-        userOutputDto.setPassword("hash");
+        userOutputDto.setEmail(testEmail);
+        userOutputDto.setPassword(testPassword);
         userOutputDto.setPhones(List.of(new PhoneDto("81", "33333333")));
         userOutputDto.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         userOutputDto.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         userOutputDto.setToken("token");
 
-        Mockito.when(userService.register(testRegisterDto)).thenReturn(userOutputDto);
+        Mockito.when(authenticationService.login(testLoginDto)).thenReturn(userOutputDto);
 
-        MvcResult mvcResult = mockMvc.perform(post("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testRegisterDto)))
+        MvcResult mvcResult = mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -89,11 +87,29 @@ public class UserControllerTest {
     }
 
     @Test
-    public void registerInvalidDataTest() throws Exception {
-        InvalidDataException exception = new InvalidDataException();
+    public void loginInvalidDataTest() throws Exception {
 
-        MvcResult mvcResult = mockMvc.perform(post("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(new RegisterDto())))
+        MvcResult mvcResult = mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(new LoginDto())))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String actualResponseBody = mvcResult.getResponse().getContentAsString();
+        String expectedResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(new InvalidDataException().getMessage()));
+
+        assertThat(expectedResponseBody)
+                .isEqualToIgnoringWhitespace(actualResponseBody);
+    }
+
+    @Test
+    public void loginEmailNotFoundTest() throws Exception {
+        EmailNotFoundException exception = new EmailNotFoundException();
+
+        Mockito.when(authenticationService.login(testLoginDto)).thenThrow(exception);
+
+        MvcResult mvcResult = mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andReturn();
@@ -106,13 +122,13 @@ public class UserControllerTest {
     }
 
     @Test
-    public void registerEmailAlreadyExistTest() throws Exception {
-        EmailAlreadyExistsException exception = new EmailAlreadyExistsException();
+    public void loginInvalidPasswordTest() throws Exception {
+        InvalidPasswordException exception = new InvalidPasswordException();
 
-        Mockito.when(userService.register(testRegisterDto)).thenThrow(exception);
+        Mockito.when(authenticationService.login(testLoginDto)).thenThrow(exception);
 
-        MvcResult mvcResult = mockMvc.perform(post("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testRegisterDto)))
+        MvcResult mvcResult = mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andReturn();

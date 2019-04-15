@@ -94,7 +94,7 @@ public class AuthenticationServiceTest {
     }
 
     @Test(expected = InvalidPasswordException.class)
-    public void loginInvalidPasswordText() throws Exception {
+    public void loginInvalidPasswordTest() throws Exception {
         String email = "email@email.com";
         String password = "password";
 

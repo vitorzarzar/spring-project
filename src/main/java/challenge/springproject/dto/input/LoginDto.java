@@ -8,6 +8,14 @@ public class LoginDto {
     @NotBlank
     private String password;
 
+    public LoginDto() {
+    }
+
+    public LoginDto(@NotBlank String email, @NotBlank String password) {
+        this.email = email;
+        this.password = password;
+    }
+
     public String getEmail() {
         return email;
     }
