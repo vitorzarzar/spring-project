@@ -1,7 +1,18 @@
 package challenge.springproject.dto.input;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+
 public class PhoneDto {
+
+    @Max(9)
+    @Min(8)
+    @NotBlank
     private String number;
+
+    @Max(3)
+    @NotBlank
     private String ddd;
 
     public PhoneDto() {

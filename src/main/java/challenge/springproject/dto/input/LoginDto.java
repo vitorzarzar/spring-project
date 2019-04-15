@@ -1,8 +1,11 @@
 package challenge.springproject.dto.input;
 
-public class LoginDto {
+import javax.validation.constraints.NotBlank;
 
+public class LoginDto {
+    @NotBlank
     private String email;
+    @NotBlank
     private String password;
 
     public String getEmail() {

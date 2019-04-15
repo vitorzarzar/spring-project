@@ -1,6 +1,7 @@
 package challenge.springproject.domain;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,18 +15,23 @@ public class User {
 
     private String name;
 
+    @NotBlank
     private String email;
 
+    @NotBlank
     private String password;
 
     @OneToMany(mappedBy = "userId")
     private List<Phone> phones;
 
+    @NotBlank
     private LocalDateTime created;
 
+    @NotBlank
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @NotBlank
     private String token;
 
     public User() { }

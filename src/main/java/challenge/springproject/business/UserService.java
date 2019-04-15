@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,13 +64,12 @@ public class UserService {
 
 
     public UserOutputDto userProfile(String token, Long id) throws Exception {
-        Long tokenId = authenticationService.validator(token);
+        Long tokenId = authenticationService.tokenValidator(token);
         if(!tokenId.equals(id)) throw new IdInconsistentTokenException();
 
         User user = dao.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-        if(user == null) return null;
 
-        if(!token.replace("Bearer ", "").equals(user.getToken())) throw new OutdatedTokenException();
+        if(!token.equals(user.getToken())) throw new OutdatedTokenException();
 
         return new UserOutputDto(
                 user.getId(),

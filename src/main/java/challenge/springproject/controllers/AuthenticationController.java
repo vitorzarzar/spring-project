@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 @RestController
 public class AuthenticationController {
 
@@ -19,7 +21,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody LoginDto loginDto) throws Exception {
+    public ResponseEntity login(@Valid @RequestBody LoginDto loginDto) throws Exception {
         return ResponseEntity.ok(service.login(loginDto));
     }
 }

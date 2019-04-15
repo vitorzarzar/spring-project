@@ -56,9 +56,9 @@ public class AuthenticationService {
         );
     }
 
-    public Long validator(String tokenInput) throws Exception {
+    public Long tokenValidator(String token) throws Exception {
         try {
-            String token = tokenInput.replace("Bearer ", "");
+            token = token.replace("Bearer ", "");
             Claims claims = tokenAuthenticationService.decodeAuthentication(token);
 
             //Verifica se o token está expirado

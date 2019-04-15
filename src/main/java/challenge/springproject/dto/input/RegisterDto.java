@@ -1,11 +1,21 @@
 package challenge.springproject.dto.input;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 public class RegisterDto {
+
+    @NotBlank
     private String name;
+
+    @Email
+    @NotBlank
     private String email;
+
+    @NotBlank
     private String password;
+
     private List<PhoneDto> phones;
 
     public String getName() {
