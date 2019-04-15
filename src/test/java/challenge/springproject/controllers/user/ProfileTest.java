@@ -10,9 +10,6 @@ import challenge.springproject.exceptions.InvalidDataException;
 import challenge.springproject.exceptions.OutdatedTokenException;
 import challenge.springproject.exceptions.UserNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -22,6 +19,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -102,20 +101,20 @@ public class ProfileTest {
 
     @Test
     public void idInconsistentTest() throws Exception {
-        exceptionUnauthorizedTest(new IdInconsistentTokenException());
+        exceptionTest(new IdInconsistentTokenException(), testToken, status().isUnauthorized());
     }
 
     @Test
     public void outdatedTokenTest() throws Exception {
-        exceptionUnauthorizedTest(new OutdatedTokenException());
+        exceptionTest(new OutdatedTokenException(), testToken, status().isUnauthorized());
     }
 
-    private void exceptionUnauthorizedTest(Exception exception) throws Exception {
-        Mockito.when(userService.userProfile(testToken, testId)).thenThrow(exception);
+    private void exceptionTest(Exception exception, String token, ResultMatcher statusResult) throws Exception {
+        Mockito.when(userService.userProfile(token, testId)).thenThrow(exception);
 
-        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", testToken))
+        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", token))
                 .andDo(print())
-                .andExpect(status().isUnauthorized())
+                .andExpect(statusResult)
                 .andReturn();
 
         String responseBody = mvcResult.getResponse().getContentAsString();

@@ -50,6 +50,7 @@ public class AuthenticationServiceTest {
     public void setup() {
         testLoginDto = new LoginDto(testEmail, testPassword);
     }
+
     @Test
     public void loginSuccessTest() throws Exception {
         String token = "token";

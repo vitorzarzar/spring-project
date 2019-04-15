@@ -8,12 +8,14 @@ import challenge.springproject.dto.output.ExceptionOutputDto;
 import challenge.springproject.dto.output.UserOutputDto;
 import challenge.springproject.exceptions.EmailNotFoundException;
 import challenge.springproject.exceptions.InvalidDataException;
+import challenge.springproject.exceptions.InvalidPasswordException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -22,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -72,7 +75,7 @@ public class LoginTest {
         userOutputDto.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         userOutputDto.setToken("token");
 
-        Mockito.when(authenticationService.login(testLoginDto)).thenReturn(userOutputDto);
+        Mockito.when(authenticationService.login(ArgumentMatchers.isA(LoginDto.class))).thenReturn(userOutputDto);
 
         MvcResult mvcResult = mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
@@ -88,55 +91,32 @@ public class LoginTest {
 
     @Test
     public void invalidDataTest() throws Exception {
-
-        MvcResult mvcResult = mockMvc.perform(post("/login")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(new LoginDto())))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        String responseBody = mvcResult.getResponse().getContentAsString();
-        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(new InvalidDataException().getMessage()));
-
-        assertThat(exceptionResponseBody)
-                .isEqualToIgnoringWhitespace(responseBody);
+        exceptionTest(new InvalidDataException(), new LoginDto(), status().isBadRequest());
     }
 
     @Test
     public void emailNotFoundTest() throws Exception {
-        Mockito.when(authenticationService.login(testLoginDto)).thenThrow(EmailNotFoundException.class);
-
-        MvcResult mvcResult = mockMvc.perform(post("/login")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        String responseBody = mvcResult.getResponse().getContentAsString();
-        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(new EmailNotFoundException().getMessage()));
-
-        assertThat(exceptionResponseBody)
-                .isEqualToIgnoringWhitespace(responseBody);
+        exceptionTest(new EmailNotFoundException(), testLoginDto, status().isBadRequest());
     }
 
-    /*@Test
+    @Test
     public void invalidPasswordTest() throws Exception {
-        exceptionTest(InvalidPasswordException.class, testLoginDto);
+        exceptionTest(new InvalidPasswordException(), testLoginDto, status().isUnauthorized());
     }
 
-    private void exceptionTest(Class<? extends Throwable> exception, LoginDto loginDto) throws Exception {
-        Mockito.when(authenticationService.login(loginDto)).thenThrow(exception);
+    private void exceptionTest(Exception exception, LoginDto loginDto, ResultMatcher statusResult) throws Exception {
+        Mockito.when(authenticationService.login(ArgumentMatchers.isA(LoginDto.class))).thenThrow(exception);
 
         MvcResult mvcResult = mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(loginDto)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
+                .andExpect(statusResult)
                 .andReturn();
 
         String responseBody = mvcResult.getResponse().getContentAsString();
-        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getConstructor().newInstance().getMessage()));
+        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
 
         assertThat(exceptionResponseBody)
                 .isEqualToIgnoringWhitespace(responseBody);
-    }*/
+    }
 }

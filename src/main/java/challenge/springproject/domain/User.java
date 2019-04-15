@@ -1,9 +1,12 @@
 package challenge.springproject.domain;
 
+import org.hibernate.annotations.Cascade;
+
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static org.hibernate.annotations.CascadeType.ALL;
 
 @Entity
 public class User {
@@ -14,35 +17,21 @@ public class User {
 
     private String name;
 
-    @NotNull
     private String email;
 
-    @NotNull
     private String password;
 
+    @Cascade(ALL)
     @OneToMany(mappedBy = "userId")
     private List<Phone> phones;
 
-    @NotNull
     private LocalDateTime created;
 
-    @NotNull
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
     private String token;
 
-    public User() { }
-
-    public User(String name, String email, String password, List<Phone> phones, LocalDateTime created, LocalDateTime lastLogin, String token) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.phones = phones;
-        this.created = created;
-        this.lastLogin = lastLogin;
-        this.token = token;
-    }
 
     public Long getId() {
         return id;

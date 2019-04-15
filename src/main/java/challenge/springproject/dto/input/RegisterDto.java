@@ -18,6 +18,16 @@ public class RegisterDto {
 
     private List<PhoneDto> phones;
 
+    public RegisterDto() {
+    }
+
+    public RegisterDto(@NotBlank String name, @Email @NotBlank String email, @NotBlank String password, List<PhoneDto> phones) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.phones = phones;
+    }
+
     public String getName() {
         return name;
     }

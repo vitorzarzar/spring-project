@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,12 +22,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,6 +48,7 @@ public class RegisterTest {
     private UserService userService;
 
     private ObjectWriter objectWriter;
+
     private RegisterDto testRegisterDto;
 
     @Before
@@ -65,15 +68,15 @@ public class RegisterTest {
     public void successTest() throws Exception {
         UserOutputDto userOutputDto = new UserOutputDto();
         userOutputDto.setId((long) 2);
-        userOutputDto.setName("name");
-        userOutputDto.setEmail("email@email.com");
+        userOutputDto.setName(testRegisterDto.getName());
+        userOutputDto.setEmail(testRegisterDto.getEmail());
         userOutputDto.setPassword("hash");
-        userOutputDto.setPhones(List.of(new PhoneDto("81", "33333333")));
+        userOutputDto.setPhones(testRegisterDto.getPhones());
         userOutputDto.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         userOutputDto.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         userOutputDto.setToken("token");
 
-        Mockito.when(userService.register(testRegisterDto)).thenReturn(userOutputDto);
+        when(userService.register(ArgumentMatchers.isA(RegisterDto.class))).thenReturn(userOutputDto);
 
         MvcResult mvcResult = mockMvc.perform(post("/user")
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testRegisterDto)))
@@ -89,21 +92,21 @@ public class RegisterTest {
 
     @Test
     public void invalidDataTest() throws Exception {
-        exceptionBadRequestTest(new InvalidDataException(), new RegisterDto());
+        exceptionTest(new InvalidDataException(), new RegisterDto(), status().isBadRequest());
     }
 
     @Test
     public void emailAlreadyExistTest() throws Exception {
-        exceptionBadRequestTest(new EmailAlreadyExistsException(), testRegisterDto);
+        exceptionTest(new EmailAlreadyExistsException(), testRegisterDto, status().isBadRequest());
     }
 
-    private void exceptionBadRequestTest(Exception exception, RegisterDto registerDto) throws Exception {
-        Mockito.when(userService.register(registerDto)).thenThrow(exception);
+    private void exceptionTest(Exception exception, RegisterDto registerDto, ResultMatcher statusResult) throws Exception {
+        when(userService.register(ArgumentMatchers.isA(RegisterDto.class))).thenThrow(exception);
 
         MvcResult mvcResult = mockMvc.perform(post("/user")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(registerDto)))
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(new ObjectMapper().writeValueAsString(registerDto)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
+                .andExpect(statusResult)
                 .andReturn();
 
         String responseBody = mvcResult.getResponse().getContentAsString();
