@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -89,7 +90,7 @@ public class UserServiceTest {
         registerDto.setEmail("email@email.com");
         registerDto.setPhones(List.of(new PhoneDto("81", "33333333")));
 
-        Mockito.when(userDao.findByEmail(registerDto.getEmail())).thenReturn(new User());
+        Mockito.when(userDao.findByEmail(registerDto.getEmail())).thenReturn(Optional.of(new User()));
 
         userService.register(registerDto);
     }

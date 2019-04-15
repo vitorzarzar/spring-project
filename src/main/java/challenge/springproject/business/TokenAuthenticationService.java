@@ -24,8 +24,6 @@ public class TokenAuthenticationService {
 
     public String generateAuthentication(User user) {
         return Jwts.builder()
-                .setIssuer("springproject")
-                .setAudience("springproject")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setSubject(user.getId().toString())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))

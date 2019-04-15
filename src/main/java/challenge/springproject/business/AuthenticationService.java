@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -34,12 +35,11 @@ public class AuthenticationService {
     }
 
     public UserOutputDto login(LoginDto dto) throws Exception {
-        User user = dao.findByEmail(dto.getEmail());
-        if(user == null) throw new EmailNotFoundException();
+        User user = dao.findByEmail(dto.getEmail()).orElseThrow(EmailNotFoundException::new);
 
         if(!passwordEncoder.matches(dto.getPassword(), user.getPassword())) throw new InvalidPasswordException();
 
-        user.setLastLogin(LocalDateTime.now());
+        user.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setToken(tokenAuthenticationService.generateAuthentication(user));
 
         dao.save(user);
