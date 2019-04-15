@@ -36,7 +36,7 @@ public class UserService {
     }
 
     public UserOutputDto register(RegisterDto dto) throws Exception {
-        if(dao.findByEmail(dto.getEmail()) != null) throw new EmailAlreadyExistsException();
+        if(dao.findByEmail(dto.getEmail()).isPresent()) throw new EmailAlreadyExistsException();
 
         User newUser = new User();
         newUser.setName(dto.getName());
