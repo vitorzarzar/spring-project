@@ -69,7 +69,7 @@ public class UserService {
 
         User user = dao.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
-        if(!token.equals(user.getToken())) throw new OutdatedTokenException();
+        if(!token.replace("Bearer ", "").equals(user.getToken())) throw new OutdatedTokenException();
 
         return new UserOutputDto(
                 user.getId(),

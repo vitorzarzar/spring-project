@@ -56,19 +56,19 @@ public class AuthenticationService {
         );
     }
 
-    public Long tokenValidator(String token) throws Exception {
+    public Long tokenValidator(String tokenInput) throws Exception {
         try {
-            token = token.replace("Bearer ", "");
+            String token = tokenInput.replace("Bearer ", "");
             Claims claims = tokenAuthenticationService.decodeAuthentication(token);
 
             //Verifica se o token está expirado
-            if (claims.getExpiration().after(new Date(System.currentTimeMillis()))) throw new ExpiredTokenException();
+            if (claims.getExpiration().before(new Date(System.currentTimeMillis()))) throw new ExpiredTokenException();
 
             return Long.parseLong(claims.getSubject());
         } catch (ExpiredTokenException et){
             et.printStackTrace();
             throw et;
-        } catch (JwtException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new InvalidTokenException();
         }
