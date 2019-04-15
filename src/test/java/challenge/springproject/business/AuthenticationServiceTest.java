@@ -34,7 +34,7 @@ public class AuthenticationServiceTest {
     AuthenticationService authenticationService;
 
     @MockBean
-    private TokenAuthenticationService tokenAuthenticationService;
+    private TokenService tokenService;
 
     @MockBean
     private UserDao userDao;
@@ -66,7 +66,7 @@ public class AuthenticationServiceTest {
 
         Mockito.when(userDao.findByEmail(testEmail)).thenReturn(Optional.of(user));
         Mockito.when(passwordEncoder.matches(testLoginDto.getPassword(), user.getPassword())).thenReturn(true);
-        Mockito.when(tokenAuthenticationService.generateAuthentication(user)).thenReturn(token);
+        Mockito.when(tokenService.generateToken(user)).thenReturn(token);
 
         UserOutputDto outputDto = authenticationService.login(testLoginDto);
 

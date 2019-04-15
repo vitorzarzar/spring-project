@@ -11,14 +11,14 @@ import java.security.Key;
 import java.util.Date;
 
 @Service
-public class TokenAuthenticationService {
+public class TokenService {
 
     private static Key key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     //30 minutos
     private static final long expirationTime = 1800000;
 
-    public String generateAuthentication(User user) {
+    public String generateToken(User user) {
         return Jwts.builder()
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setSubject(user.getId().toString())
@@ -27,7 +27,7 @@ public class TokenAuthenticationService {
                 .compact();
     }
 
-    public Claims decodeAuthentication(String token) {
+    public Claims decodeToken(String token) {
         return Jwts.parser()
                 .setSigningKey(key)
                 .parseClaimsJws(token)

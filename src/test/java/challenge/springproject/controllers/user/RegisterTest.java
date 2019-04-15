@@ -46,7 +46,6 @@ public class RegisterTest {
     private UserService userService;
 
     private ObjectWriter objectWriter;
-
     private RegisterDto testRegisterDto;
 
     @Before
@@ -90,15 +89,15 @@ public class RegisterTest {
 
     @Test
     public void invalidDataTest() throws Exception {
-        exceptionTest(new InvalidDataException(), new RegisterDto());
+        exceptionBadRequestTest(new InvalidDataException(), new RegisterDto());
     }
 
     @Test
     public void emailAlreadyExistTest() throws Exception {
-        exceptionTest(new EmailAlreadyExistsException(), testRegisterDto);
+        exceptionBadRequestTest(new EmailAlreadyExistsException(), testRegisterDto);
     }
 
-    private void exceptionTest(Exception exception, RegisterDto registerDto) throws Exception {
+    private void exceptionBadRequestTest(Exception exception, RegisterDto registerDto) throws Exception {
         Mockito.when(userService.register(registerDto)).thenThrow(exception);
 
         MvcResult mvcResult = mockMvc.perform(post("/user")

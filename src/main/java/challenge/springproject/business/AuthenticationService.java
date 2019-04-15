@@ -10,7 +10,6 @@ import challenge.springproject.exceptions.InvalidPasswordException;
 import challenge.springproject.exceptions.InvalidTokenException;
 import challenge.springproject.persistence.UserDao;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +25,12 @@ public class AuthenticationService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final TokenAuthenticationService tokenAuthenticationService;
+    private final TokenService tokenService;
 
-    public AuthenticationService(UserDao dao, PasswordEncoder passwordEncoder, TokenAuthenticationService tokenAuthenticationService) {
+    public AuthenticationService(UserDao dao, PasswordEncoder passwordEncoder, TokenService tokenService) {
         this.dao = dao;
         this.passwordEncoder = passwordEncoder;
-        this.tokenAuthenticationService = tokenAuthenticationService;
+        this.tokenService = tokenService;
     }
 
     public UserOutputDto login(LoginDto dto) throws Exception {
@@ -40,7 +39,7 @@ public class AuthenticationService {
         if(!passwordEncoder.matches(dto.getPassword(), user.getPassword())) throw new InvalidPasswordException();
 
         user.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        user.setToken(tokenAuthenticationService.generateAuthentication(user));
+        user.setToken(tokenService.generateToken(user));
 
         dao.save(user);
 
@@ -59,7 +58,7 @@ public class AuthenticationService {
     public Long tokenValidator(String tokenInput) throws Exception {
         try {
             String token = tokenInput.replace("Bearer ", "");
-            Claims claims = tokenAuthenticationService.decodeAuthentication(token);
+            Claims claims = tokenService.decodeToken(token);
 
             //Verifica se o token está expirado
             if (claims.getExpiration().before(new Date(System.currentTimeMillis()))) throw new ExpiredTokenException();

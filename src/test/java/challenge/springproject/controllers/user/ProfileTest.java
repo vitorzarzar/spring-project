@@ -7,6 +7,7 @@ import challenge.springproject.dto.output.ExceptionOutputDto;
 import challenge.springproject.dto.output.UserOutputDto;
 import challenge.springproject.exceptions.IdInconsistentTokenException;
 import challenge.springproject.exceptions.InvalidDataException;
+import challenge.springproject.exceptions.OutdatedTokenException;
 import challenge.springproject.exceptions.UserNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -43,17 +44,8 @@ public class ProfileTest {
     @MockBean
     private UserService userService;
 
-    private ObjectWriter objectWriter;
-
     private String testToken = "Bearer token";
     private Long testId = (long) 1;
-
-    @Before
-    public void setup() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-        objectWriter = mapper.writer().withDefaultPrettyPrinter();
-    }
 
     @Test
     public void successTest() throws Exception {
@@ -81,6 +73,18 @@ public class ProfileTest {
     }
 
     @Test
+    public void userNotFoundTest() throws Exception {
+        Mockito.when(userService.userProfile(testToken, testId)).thenThrow(new UserNotFoundException(testId));
+
+        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", testToken))
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentAsString()).isEqualTo("");
+    }
+
+    @Test
     public void invalidDataTest() throws Exception {
         InvalidDataException exception = new InvalidDataException();
 
@@ -97,45 +101,21 @@ public class ProfileTest {
     }
 
     @Test
-    public void userNotFoundTest() throws Exception {
-        Mockito.when(userService.userProfile(testToken, testId)).thenThrow(new UserNotFoundException(testId));
-
-        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", testToken))
-                .andDo(print())
-                .andExpect(status().isNoContent())
-                .andReturn();
-
-        assertThat(mvcResult.getResponse().getContentAsString()).isEqualTo("");
+    public void idInconsistentTest() throws Exception {
+        exceptionUnauthorizedTest(new IdInconsistentTokenException());
     }
 
     @Test
-    public void idInconsistentTest() throws Exception {
-        Exception exception = new IdInconsistentTokenException();
-        Mockito.when(userService.userProfile(testToken, testId)).thenThrow(exception);
-
-        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", testToken))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        String responseBody = mvcResult.getResponse().getContentAsString();
-        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
-
-        assertThat(exceptionResponseBody)
-                .isEqualToIgnoringWhitespace(responseBody);
-    }
-
-    /*@Test
     public void outdatedTokenTest() throws Exception {
-        exceptionTest(new OutdatedTokenException());
+        exceptionUnauthorizedTest(new OutdatedTokenException());
     }
 
-    private void exceptionTest(Exception exception) throws Exception {
+    private void exceptionUnauthorizedTest(Exception exception) throws Exception {
         Mockito.when(userService.userProfile(testToken, testId)).thenThrow(exception);
 
         MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", testToken))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andReturn();
 
         String responseBody = mvcResult.getResponse().getContentAsString();
@@ -143,5 +123,5 @@ public class ProfileTest {
 
         assertThat(exceptionResponseBody)
                 .isEqualToIgnoringWhitespace(responseBody);
-    }*/
+    }
 }

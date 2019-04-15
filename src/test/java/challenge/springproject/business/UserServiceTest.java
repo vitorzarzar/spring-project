@@ -39,7 +39,7 @@ public class UserServiceTest {
     private AuthenticationService authenticationService;
 
     @MockBean
-    private TokenAuthenticationService tokenAuthenticationService;
+    private TokenService tokenService;
 
     @MockBean
     private UserDao userDao;
@@ -74,7 +74,7 @@ public class UserServiceTest {
 
         Mockito.when(userDao.save(newUser)).thenReturn(newUser);
 
-        Mockito.when(tokenAuthenticationService.generateAuthentication(newUser)).thenReturn(token);
+        Mockito.when(tokenService.generateToken(newUser)).thenReturn(token);
 
         UserOutputDto outputDto = userService.register(testRegisterDto);
         assertThat(outputDto).isEqualToComparingFieldByFieldRecursively(new UserOutputDto(

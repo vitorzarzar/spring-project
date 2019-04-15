@@ -20,10 +20,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-            .authorizeRequests()
-                .anyRequest().permitAll()
-                .and()
             .csrf().disable()
-            .headers().frameOptions().disable();
+            .headers().frameOptions().disable()
+            .and()
+            .authorizeRequests()
+                .anyRequest().permitAll();
     }
 }

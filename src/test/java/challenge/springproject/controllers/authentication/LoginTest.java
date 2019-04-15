@@ -8,7 +8,6 @@ import challenge.springproject.dto.output.ExceptionOutputDto;
 import challenge.springproject.dto.output.UserOutputDto;
 import challenge.springproject.exceptions.EmailNotFoundException;
 import challenge.springproject.exceptions.InvalidDataException;
-import challenge.springproject.exceptions.InvalidPasswordException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -105,15 +104,27 @@ public class LoginTest {
 
     @Test
     public void emailNotFoundTest() throws Exception {
-        exceptionTest(new EmailNotFoundException(), new LoginDto());
+        Mockito.when(authenticationService.login(testLoginDto)).thenThrow(EmailNotFoundException.class);
+
+        MvcResult mvcResult = mockMvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(new EmailNotFoundException().getMessage()));
+
+        assertThat(exceptionResponseBody)
+                .isEqualToIgnoringWhitespace(responseBody);
     }
 
-    @Test
+    /*@Test
     public void invalidPasswordTest() throws Exception {
-        exceptionTest(new InvalidPasswordException(), testLoginDto);
+        exceptionTest(InvalidPasswordException.class, testLoginDto);
     }
 
-    private void exceptionTest(Exception exception, LoginDto loginDto) throws Exception {
+    private void exceptionTest(Class<? extends Throwable> exception, LoginDto loginDto) throws Exception {
         Mockito.when(authenticationService.login(loginDto)).thenThrow(exception);
 
         MvcResult mvcResult = mockMvc.perform(post("/login")
@@ -123,9 +134,9 @@ public class LoginTest {
                 .andReturn();
 
         String responseBody = mvcResult.getResponse().getContentAsString();
-        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getMessage()));
+        String exceptionResponseBody = objectMapper.writeValueAsString(new ExceptionOutputDto(exception.getConstructor().newInstance().getMessage()));
 
         assertThat(exceptionResponseBody)
                 .isEqualToIgnoringWhitespace(responseBody);
-    }
+    }*/
 }

@@ -26,13 +26,13 @@ public class UserService {
 
     private final AuthenticationService authenticationService;
 
-    private final TokenAuthenticationService tokenAuthenticationService;
+    private final TokenService tokenService;
 
-    public UserService(UserDao dao, PasswordEncoder passwordEncoder, AuthenticationService authenticationService, TokenAuthenticationService tokenAuthenticationService) {
+    public UserService(UserDao dao, PasswordEncoder passwordEncoder, AuthenticationService authenticationService, TokenService tokenService) {
         this.dao = dao;
         this.passwordEncoder = passwordEncoder;
         this.authenticationService = authenticationService;
-        this.tokenAuthenticationService = tokenAuthenticationService;
+        this.tokenService = tokenService;
     }
 
     public UserOutputDto register(RegisterDto dto) throws Exception {
@@ -47,7 +47,7 @@ public class UserService {
         newUser.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         dao.save(newUser);
 
-        newUser.setToken(tokenAuthenticationService.generateAuthentication(newUser));
+        newUser.setToken(tokenService.generateToken(newUser));
         dao.setToken(newUser.getToken(), newUser.getId());
 
         return new UserOutputDto(
