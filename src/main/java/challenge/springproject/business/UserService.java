@@ -67,7 +67,7 @@ public class UserService {
         Long tokenId = authenticationService.tokenValidator(token);
         if(!tokenId.equals(id)) throw new IdInconsistentTokenException();
 
-        User user = dao.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        User user = dao.findById(id).orElseThrow(UserNotFoundException::new);
 
         if(!token.replace("Bearer ", "").equals(user.getToken())) throw new OutdatedTokenException();
 
