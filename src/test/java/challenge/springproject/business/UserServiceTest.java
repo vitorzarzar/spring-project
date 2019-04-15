@@ -10,6 +10,7 @@ import challenge.springproject.exceptions.IdInconsistentTokenException;
 import challenge.springproject.exceptions.OutdatedTokenException;
 import challenge.springproject.exceptions.UserNotFoundException;
 import challenge.springproject.persistence.UserDao;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -46,36 +47,42 @@ public class UserServiceTest {
     @MockBean
     private PasswordEncoder passwordEncoder;
 
+    private RegisterDto testRegisterDto;
+    private String testPassword = "hash";
+    private String token = "token";
+    private Long id = (long) 1;
+
+    @Before
+    public void setup() {
+        testRegisterDto = new RegisterDto();
+        testRegisterDto.setName("name");
+        testRegisterDto.setPassword(testPassword);
+        testRegisterDto.setEmail("email@email.com");
+        testRegisterDto.setPhones(List.of(new PhoneDto("81", "33333333")));
+    }
     @Test
     public void registerSuccessTest() throws Exception {
-        String passwordEncoderMock = "hash";
-        Mockito.when(passwordEncoder.encode("password")).thenReturn(passwordEncoderMock);
-
-        RegisterDto registerDto = new RegisterDto();
-        registerDto.setName("name");
-        registerDto.setPassword("password");
-        registerDto.setEmail("email@email.com");
-        registerDto.setPhones(List.of(new PhoneDto("81", "33333333")));
+        Mockito.when(passwordEncoder.encode(testPassword)).thenReturn(testPassword);
 
         User newUser = new User();
-        newUser.setName(registerDto.getName());
-        newUser.setEmail(registerDto.getEmail());
-        newUser.setPassword(passwordEncoderMock);
-        newUser.setPhones(registerDto.getPhones().stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
+        newUser.setName(testRegisterDto.getName());
+        newUser.setEmail(testRegisterDto.getEmail());
+        newUser.setPassword(testPassword);
+        newUser.setPhones(testRegisterDto.getPhones().stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
         newUser.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         newUser.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
 
         Mockito.when(userDao.save(newUser)).thenReturn(newUser);
 
-        Mockito.when(tokenAuthenticationService.generateAuthentication(newUser)).thenReturn("token");
+        Mockito.when(tokenAuthenticationService.generateAuthentication(newUser)).thenReturn(token);
 
-        UserOutputDto outputDto = userService.register(registerDto);
+        UserOutputDto outputDto = userService.register(testRegisterDto);
         assertThat(outputDto).isEqualToComparingFieldByFieldRecursively(new UserOutputDto(
                 newUser.getId(),
                 newUser.getName(),
                 newUser.getEmail(),
                 newUser.getPassword(),
-                registerDto.getPhones(),
+                testRegisterDto.getPhones(),
                 newUser.getCreated(),
                 newUser.getLastLogin(),
                 newUser.getToken()
@@ -84,28 +91,20 @@ public class UserServiceTest {
 
     @Test(expected = EmailAlreadyExistsException.class)
     public void registerEmailAlreadyExistTest() throws Exception {
-        RegisterDto registerDto = new RegisterDto();
-        registerDto.setName("name");
-        registerDto.setPassword("password");
-        registerDto.setEmail("email@email.com");
-        registerDto.setPhones(List.of(new PhoneDto("81", "33333333")));
+        Mockito.when(userDao.findByEmail(testRegisterDto.getEmail())).thenReturn(Optional.of(new User()));
 
-        Mockito.when(userDao.findByEmail(registerDto.getEmail())).thenReturn(Optional.of(new User()));
-
-        userService.register(registerDto);
+        userService.register(testRegisterDto);
     }
 
     @Test
     public void userProfileSuccessTest() throws Exception {
-        String token = "token";
-        Long id = (long) 0;
         Mockito.when(authenticationService.tokenValidator(token)).thenReturn(id);
 
         User user = new User();
         user.setId(id);
-        user.setName("name");
-        user.setEmail("email@email.com");
-        user.setPassword("hash");
+        user.setName(testRegisterDto.getName());
+        user.setEmail(testRegisterDto.getEmail());
+        user.setPassword(testPassword);
         user.setPhones(List.of(new PhoneDto("81", "33333333")).stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
         user.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
@@ -129,8 +128,6 @@ public class UserServiceTest {
 
     @Test(expected = IdInconsistentTokenException.class)
     public void userProfileIdInconsistentTest() throws Exception {
-        String token = "token";
-        Long id = (long) 0;
         Mockito.when(authenticationService.tokenValidator(token)).thenReturn((long) 2);
 
         userService.userProfile(token, id);
@@ -138,8 +135,6 @@ public class UserServiceTest {
 
     @Test(expected = UserNotFoundException.class)
     public void userProfileUserNotFoundTest() throws Exception {
-        String token = "token";
-        Long id = (long) 0;
         Mockito.when(authenticationService.tokenValidator(token)).thenReturn(id);
 
         Mockito.when(userDao.findById(id)).thenReturn(Optional.empty());
@@ -148,8 +143,6 @@ public class UserServiceTest {
 
     @Test(expected = OutdatedTokenException.class)
     public void userProfileOutdatedTokenTest() throws Exception {
-        String token = "token";
-        Long id = (long) 0;
         Mockito.when(authenticationService.tokenValidator(token)).thenReturn(id);
 
         User user = new User();

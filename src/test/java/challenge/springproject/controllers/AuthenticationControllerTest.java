@@ -46,10 +46,10 @@ public class AuthenticationControllerTest {
     private AuthenticationService authenticationService;
 
     private ObjectWriter objectWriter;
-
     private LoginDto testLoginDto;
     private String testEmail = "email@email.com";
     private String testPassword = "password";
+
     @Before
     public void setup() {
         ObjectMapper mapper = new ObjectMapper();

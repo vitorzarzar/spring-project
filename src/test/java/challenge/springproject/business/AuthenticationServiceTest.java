@@ -8,6 +8,7 @@ import challenge.springproject.dto.output.UserOutputDto;
 import challenge.springproject.exceptions.EmailNotFoundException;
 import challenge.springproject.exceptions.InvalidPasswordException;
 import challenge.springproject.persistence.UserDao;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -41,31 +42,33 @@ public class AuthenticationServiceTest {
     @MockBean
     private PasswordEncoder passwordEncoder;
 
+    private LoginDto testLoginDto;
+    private String testEmail = "email@email.com";
+    private String testPassword = "password";
+
+    @Before
+    public void setup() {
+        testLoginDto = new LoginDto(testEmail, testPassword);
+    }
     @Test
     public void loginSuccessTest() throws Exception {
-        String email = "email@email.com";
-        String password = "password";
         String token = "token";
-
-        LoginDto loginDto = new LoginDto();
-        loginDto.setEmail(email);
-        loginDto.setPassword(password);
 
         User user = new User();
         user.setId((long) 1);
         user.setName("name");
-        user.setEmail(email);
+        user.setEmail(testEmail);
         user.setPassword("hash");
         user.setPhones(List.of(new PhoneDto("81", "33333333")).stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
         user.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setToken(token);
 
-        Mockito.when(userDao.findByEmail(email)).thenReturn(Optional.of(user));
-        Mockito.when(passwordEncoder.matches(loginDto.getPassword(), user.getPassword())).thenReturn(true);
+        Mockito.when(userDao.findByEmail(testEmail)).thenReturn(Optional.of(user));
+        Mockito.when(passwordEncoder.matches(testLoginDto.getPassword(), user.getPassword())).thenReturn(true);
         Mockito.when(tokenAuthenticationService.generateAuthentication(user)).thenReturn(token);
 
-        UserOutputDto outputDto = authenticationService.login(loginDto);
+        UserOutputDto outputDto = authenticationService.login(testLoginDto);
 
         assertThat(outputDto).isEqualToComparingFieldByFieldRecursively(new UserOutputDto(
                 user.getId(),
@@ -81,34 +84,20 @@ public class AuthenticationServiceTest {
 
     @Test(expected = EmailNotFoundException.class)
     public void loginEmailNotFoundTest() throws Exception {
-        String email = "email@email.com";
-        String password = "password";
+        Mockito.when(userDao.findByEmail(testEmail)).thenReturn(Optional.empty());
 
-        LoginDto loginDto = new LoginDto();
-        loginDto.setEmail(email);
-        loginDto.setPassword(password);
-
-        Mockito.when(userDao.findByEmail(email)).thenReturn(Optional.empty());
-
-        authenticationService.login(loginDto);
+        authenticationService.login(testLoginDto);
     }
 
     @Test(expected = InvalidPasswordException.class)
     public void loginInvalidPasswordTest() throws Exception {
-        String email = "email@email.com";
-        String password = "password";
-
-        LoginDto loginDto = new LoginDto();
-        loginDto.setEmail(email);
-        loginDto.setPassword(password);
-
         User user = new User();
-        user.setPassword("hash");
+        user.setPassword(testPassword);
 
-        Mockito.when(userDao.findByEmail(email)).thenReturn(Optional.of(user));
-        Mockito.when(passwordEncoder.matches(loginDto.getPassword(), user.getPassword())).thenReturn(false);
+        Mockito.when(userDao.findByEmail(testEmail)).thenReturn(Optional.of(user));
+        Mockito.when(passwordEncoder.matches(testLoginDto.getPassword(), user.getPassword())).thenReturn(false);
 
-        authenticationService.login(loginDto);
+        authenticationService.login(testLoginDto);
 
     }
 }
