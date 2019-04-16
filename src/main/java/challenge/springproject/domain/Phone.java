@@ -13,14 +13,15 @@ public class Phone {
 
     private String ddd;
 
-    public Phone(String number, String ddd) {
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    public Phone(String number, String ddd, User user) {
         this.number = number;
         this.ddd = ddd;
+        this.user = user;
     }
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
 
     public Long getId() {
         return id;
@@ -46,11 +47,11 @@ public class Phone {
         this.ddd = ddd;
     }
 
-    public User getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(User userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 }

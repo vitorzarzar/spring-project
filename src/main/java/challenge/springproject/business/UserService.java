@@ -9,18 +9,22 @@ import challenge.springproject.exceptions.EmailAlreadyExistsException;
 import challenge.springproject.exceptions.IdInconsistentTokenException;
 import challenge.springproject.exceptions.OutdatedTokenException;
 import challenge.springproject.exceptions.UserNotFoundException;
+import challenge.springproject.persistence.PhoneDao;
 import challenge.springproject.persistence.UserDao;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    private final UserDao dao;
+    private final UserDao userDao;
+
+    private final PhoneDao phoneDao;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -28,27 +32,35 @@ public class UserService {
 
     private final TokenService tokenService;
 
-    public UserService(UserDao dao, PasswordEncoder passwordEncoder, AuthenticationService authenticationService, TokenService tokenService) {
-        this.dao = dao;
+    public UserService(UserDao userDao, PhoneDao phoneDao, PasswordEncoder passwordEncoder, AuthenticationService authenticationService, TokenService tokenService) {
+        this.userDao = userDao;
+        this.phoneDao = phoneDao;
         this.passwordEncoder = passwordEncoder;
         this.authenticationService = authenticationService;
         this.tokenService = tokenService;
     }
 
     public UserOutputDto register(RegisterDto dto) throws Exception {
-        if(dao.findByEmail(dto.getEmail()).isPresent()) throw new EmailAlreadyExistsException();
+        if(userDao.findByEmail(dto.getEmail()).isPresent()) throw new EmailAlreadyExistsException();
 
         User newUser = new User();
         newUser.setName(dto.getName());
         newUser.setEmail(dto.getEmail());
         newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
-        newUser.setPhones(dto.getPhones().stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
+        newUser.setPhones(new ArrayList<>());
         newUser.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         newUser.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        dao.save(newUser);
+
+        userDao.save(newUser);
+
+        dto.getPhones().forEach(phone -> {
+            Phone newPhone = new Phone(phone.getNumber(), phone.getDdd(), newUser);
+            phoneDao.save(newPhone);
+            newUser.getPhones().add(newPhone);
+        });
 
         newUser.setToken(tokenService.generateToken(newUser));
-        dao.setToken(newUser.getToken(), newUser.getId());
+        userDao.save(newUser);
 
         return new UserOutputDto(
                 newUser.getId(),
@@ -67,7 +79,7 @@ public class UserService {
         Long tokenId = authenticationService.tokenValidator(token);
         if(!tokenId.equals(id)) throw new IdInconsistentTokenException();
 
-        User user = dao.findById(id).orElseThrow(UserNotFoundException::new);
+        User user = userDao.findById(id).orElseThrow(UserNotFoundException::new);
 
         if(!token.replace("Bearer ", "").equals(user.getToken())) throw new OutdatedTokenException();
 

@@ -1,12 +1,8 @@
 package challenge.springproject.domain;
 
-import org.hibernate.annotations.Cascade;
-
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import static org.hibernate.annotations.CascadeType.ALL;
 
 @Entity
 public class User {
@@ -21,8 +17,7 @@ public class User {
 
     private String password;
 
-    @Cascade(ALL)
-    @OneToMany(mappedBy = "userId")
+    @OneToMany(mappedBy = "user", targetEntity = Phone.class, cascade = CascadeType.ALL)
     private List<Phone> phones;
 
     private LocalDateTime created;
