@@ -20,7 +20,7 @@ public class AuthenticationController {
         this.service = service;
     }
 
-    @PostMapping("/login")
+    @PostMapping("/api/login")
     public ResponseEntity login(@Valid @RequestBody LoginDto loginDto) throws Exception {
         return ResponseEntity.ok(service.login(loginDto));
     }

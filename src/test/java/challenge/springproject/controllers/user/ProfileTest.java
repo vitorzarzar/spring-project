@@ -45,6 +45,7 @@ public class ProfileTest {
 
     private String testToken = "Bearer token";
     private Long testId = (long) 1;
+    private String url = "/api/user/";
 
     @Test
     public void successTest() throws Exception {
@@ -60,7 +61,7 @@ public class ProfileTest {
 
         Mockito.when(userService.userProfile(testToken, testId)).thenReturn(userOutputDto);
 
-        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", testToken))
+        MvcResult mvcResult = mockMvc.perform(get(url + testId).header("Authorization", testToken))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
@@ -73,9 +74,9 @@ public class ProfileTest {
 
     @Test
     public void userNotFoundTest() throws Exception {
-        Mockito.when(userService.userProfile(testToken, testId)).thenThrow(new UserNotFoundException(testId));
+        Mockito.when(userService.userProfile(testToken, testId)).thenThrow(new UserNotFoundException());
 
-        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", testToken))
+        MvcResult mvcResult = mockMvc.perform(get(url + testId).header("Authorization", testToken))
                 .andDo(print())
                 .andExpect(status().isNoContent())
                 .andReturn();
@@ -87,7 +88,7 @@ public class ProfileTest {
     public void invalidDataTest() throws Exception {
         InvalidDataException exception = new InvalidDataException();
 
-        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId))
+        MvcResult mvcResult = mockMvc.perform(get(url + testId))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andReturn();
@@ -112,7 +113,7 @@ public class ProfileTest {
     private void exceptionTest(Exception exception, String token, ResultMatcher statusResult) throws Exception {
         Mockito.when(userService.userProfile(token, testId)).thenThrow(exception);
 
-        MvcResult mvcResult = mockMvc.perform(get("/user/" + testId).header("Authorization", token))
+        MvcResult mvcResult = mockMvc.perform(get(url + testId).header("Authorization", token))
                 .andDo(print())
                 .andExpect(statusResult)
                 .andReturn();

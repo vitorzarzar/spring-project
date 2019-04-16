@@ -48,8 +48,8 @@ public class RegisterTest {
     private UserService userService;
 
     private ObjectWriter objectWriter;
-
     private RegisterDto testRegisterDto;
+    private String url = "/api/user";
 
     @Before
     public void setup() {
@@ -78,7 +78,7 @@ public class RegisterTest {
 
         when(userService.register(ArgumentMatchers.isA(RegisterDto.class))).thenReturn(userOutputDto);
 
-        MvcResult mvcResult = mockMvc.perform(post("/user")
+        MvcResult mvcResult = mockMvc.perform(post(url)
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testRegisterDto)))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -103,7 +103,7 @@ public class RegisterTest {
     private void exceptionTest(Exception exception, RegisterDto registerDto, ResultMatcher statusResult) throws Exception {
         when(userService.register(ArgumentMatchers.isA(RegisterDto.class))).thenThrow(exception);
 
-        MvcResult mvcResult = mockMvc.perform(post("/user")
+        MvcResult mvcResult = mockMvc.perform(post(url)
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(new ObjectMapper().writeValueAsString(registerDto)))
                 .andDo(print())
                 .andExpect(statusResult)

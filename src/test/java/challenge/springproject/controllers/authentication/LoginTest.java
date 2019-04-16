@@ -52,6 +52,7 @@ public class LoginTest {
     private LoginDto testLoginDto;
     private String testEmail = "email@email.com";
     private String testPassword = "password";
+    private String url = "/api/login";
 
     @Before
     public void setup() {
@@ -77,7 +78,7 @@ public class LoginTest {
 
         Mockito.when(authenticationService.login(ArgumentMatchers.isA(LoginDto.class))).thenReturn(userOutputDto);
 
-        MvcResult mvcResult = mockMvc.perform(post("/login")
+        MvcResult mvcResult = mockMvc.perform(post(url)
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(testLoginDto)))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -107,7 +108,7 @@ public class LoginTest {
     private void exceptionTest(Exception exception, LoginDto loginDto, ResultMatcher statusResult) throws Exception {
         Mockito.when(authenticationService.login(ArgumentMatchers.isA(LoginDto.class))).thenThrow(exception);
 
-        MvcResult mvcResult = mockMvc.perform(post("/login")
+        MvcResult mvcResult = mockMvc.perform(post(url)
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(objectWriter.writeValueAsString(loginDto)))
                 .andDo(print())
                 .andExpect(statusResult)
