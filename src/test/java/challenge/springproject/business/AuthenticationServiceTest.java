@@ -1,6 +1,5 @@
 package challenge.springproject.business;
 
-import challenge.springproject.domain.Phone;
 import challenge.springproject.domain.User;
 import challenge.springproject.dto.input.LoginDto;
 import challenge.springproject.dto.input.PhoneDto;
@@ -20,7 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -60,7 +59,7 @@ public class AuthenticationServiceTest {
         user.setName("name");
         user.setEmail(testEmail);
         user.setPassword("hash");
-        user.setPhones(List.of(new PhoneDto("81", "33333333")).stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
+        user.setPhones(new ArrayList<>());
         user.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setToken(token);

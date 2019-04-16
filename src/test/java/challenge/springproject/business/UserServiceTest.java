@@ -1,6 +1,5 @@
 package challenge.springproject.business;
 
-import challenge.springproject.domain.Phone;
 import challenge.springproject.domain.User;
 import challenge.springproject.dto.input.PhoneDto;
 import challenge.springproject.dto.input.RegisterDto;
@@ -9,6 +8,7 @@ import challenge.springproject.exceptions.EmailAlreadyExistsException;
 import challenge.springproject.exceptions.IdInconsistentTokenException;
 import challenge.springproject.exceptions.OutdatedTokenException;
 import challenge.springproject.exceptions.UserNotFoundException;
+import challenge.springproject.persistence.PhoneDao;
 import challenge.springproject.persistence.UserDao;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +22,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,6 +44,9 @@ public class UserServiceTest {
 
     @MockBean
     private UserDao userDao;
+
+    @MockBean
+    private PhoneDao phoneDao;
 
     @MockBean
     private PasswordEncoder passwordEncoder;
@@ -68,11 +72,9 @@ public class UserServiceTest {
         newUser.setName(testRegisterDto.getName());
         newUser.setEmail(testRegisterDto.getEmail());
         newUser.setPassword(testPassword);
-        newUser.setPhones(testRegisterDto.getPhones().stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
+        newUser.setPhones(new ArrayList<>());
         newUser.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         newUser.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-
-        Mockito.when(userDao.save(newUser)).thenReturn(newUser);
 
         Mockito.when(tokenService.generateToken(newUser)).thenReturn(token);
 
@@ -105,7 +107,7 @@ public class UserServiceTest {
         user.setName(testRegisterDto.getName());
         user.setEmail(testRegisterDto.getEmail());
         user.setPassword(testPassword);
-        user.setPhones(List.of(new PhoneDto("81", "33333333")).stream().map(phone -> new Phone(phone.getNumber(), phone.getDdd())).collect(Collectors.toList()));
+        user.setPhones(new ArrayList<>());
         user.setCreated(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setLastLogin(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         user.setToken(token);
