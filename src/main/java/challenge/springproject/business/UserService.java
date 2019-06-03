@@ -53,11 +53,7 @@ public class UserService {
 
         userDao.save(newUser);
 
-        dto.getPhones().forEach(phone -> {
-            Phone newPhone = new Phone(phone.getNumber(), phone.getDdd(), newUser);
-            phoneDao.save(newPhone);
-            newUser.getPhones().add(newPhone);
-        });
+        dto.getPhones().forEach(phone -> phoneDao.save(new Phone(phone.getNumber(), phone.getDdd(), newUser)) );
 
         newUser.setToken(tokenService.generateToken(newUser));
         userDao.save(newUser);
